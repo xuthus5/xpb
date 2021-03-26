@@ -1,0 +1,3 @@
+# xpb
+
+> a pastebin cli

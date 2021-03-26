@@ -1,0 +1,15 @@
+# 项目名称
+project_name: pastebin
+# 端口
+port: :8080
+# mongodb配置
+mongodb:
+  uri: mongodb://127.0.0.1:27017
+  db: test
+# https配置
+https:
+  # 是否开启https
+  enable: false
+  # 证书路径
+  crt_path:
+  key_path:
