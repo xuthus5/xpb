@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -19,7 +20,12 @@ import (
 
 // ResponseJSON 输出JSON结果
 func ResponseJSON(w http.ResponseWriter, httpCode int, response interface{}) {
-	body, err := json.Marshal(response)
+	var resp = Response{
+		Code:    httpCode,
+		Message: "ok",
+		Data:    response,
+	}
+	body, err := json.Marshal(resp)
 	if err != nil {
 		log.Errorf("response marshal err: %v", err)
 		return
@@ -129,6 +135,7 @@ func GetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var format = r.URL.Query().Get("format")
 	var req driver.CodeSegmentRecord
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -158,7 +165,12 @@ func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	req.CreatedAt = time.Now().Unix()
 
 	if req.ShortKey == "" {
-		var sk = genSK(req.Content)
+		sk, err := genSK(req.Content)
+		if err != nil {
+			log.Errorf("get sk err: %v", err)
+			ResponseJSONError(w, 500, err)
+			return
+		}
 		req.ShortKey = sk
 	}
 
@@ -167,6 +179,10 @@ func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		log.Errorf("insert err: %+v", err)
 		ResponseJSONError(w, 500, err)
 		return
+	}
+
+	if format == "" {
+		// 输出某些数据
 	}
 
 	ResponseJSON(w, http.StatusOK, req)
@@ -237,7 +253,12 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if req.ShortKey == "" && old.ShortKey != "" {
 		req.ShortKey = old.ShortKey
 	} else if req.ShortKey == "" {
-		var sk = genSK(req.Content)
+		sk, err := genSK(req.Content)
+		if err != nil {
+			log.Errorf("get sk err: %v", err)
+			ResponseJSONError(w, 500, err)
+			return
+		}
 		req.ShortKey = sk
 	}
 
@@ -255,9 +276,23 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	})
 }
 
-func genSK(content string) string {
+func genSK(content string) (string, error) {
 	var h = md5.New()
 	_, _ = h.Write([]byte(content))
-	var digest = hex.EncodeToString(h.Sum(nil))
-	return common.Base62Encoder(digest[:len(digest)/2], digest[len(digest)/2:])
+	var digest = hex.EncodeToString(h.Sum(nil))[8:24]
+	front, err := strconv.ParseInt(digest[:len(digest)/2], 16, 64)
+	if err != nil {
+		log.Errorf("gen sk err: %v", err)
+		return "", err
+	}
+
+	end, err := strconv.ParseInt(digest[len(digest)/2:], 16, 64)
+	if err != nil {
+		log.Errorf("gen sk err: %v", err)
+		return "", err
+	}
+
+	frontDigest := common.Encode62(front)
+	endDigest := common.Encode62(end)
+	return fmt.Sprintf("%s%s", frontDigest, endDigest), nil
 }

@@ -1,63 +1,52 @@
 package common
 
-func getInt(a uint8) int {
-	if a-'0' > 0 && a <= '9' {
-		return int(a - '0')
+import (
+	"bytes"
+	"math"
+)
+
+// characters used for conversion
+const alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+// converts number to base62
+func Encode62(number int64) string {
+	if number == 0 {
+		return string(alphabet[0])
 	}
 
-	if a-'a' > 0 && a <= 'z' {
-		return int(a-'a') + 10
+	chars := make([]byte, 0)
+
+	length := int64(len(alphabet))
+
+	for number > 0 {
+		result := number / length
+		remainder := number % length
+		chars = append(chars, alphabet[remainder])
+		number = result
 	}
 
-	if a-'A' > 0 && a <= 'Z' {
-		return int(a-'A') + 20
+	for i, j := 0, len(chars)-1; i < j; i, j = i+1, j-1 {
+		chars[i], chars[j] = chars[j], chars[i]
 	}
 
-	return int('@')
+	return string(chars)
 }
 
-func Base62Encoder(str1 string, str2 string) string {
-	List62 := []string{"f", "x", "H", "M", "u", "a", "R", "5", "i", "V", "G", "s", "T", "c", "2", "1", "y", "4", "t", "U", "n", "o", "q", "v", "F", "b", "J", "7", "j", "3", "K", "p", "P", "g", "N", "l", "Y", "6", "W", "r", "e", "S", "I", "z", "O", "L", "m", "d", "A", "h", "D", "w", "Q", "E", "Z", "0", "8", "C", "B", "9", "k", "X"}
-	i := len(str1) - 1
-	j := len(str2) - 1
-	var sum string
-	var tem int //进位
-	for i >= 0 && j >= 0 {
-		s := getInt(str1[i]) + getInt(str2[j]) + tem
-		if s >= 62 {
-			tem = 1
-			sum = List62[s%62] + sum
-		} else {
-			tem = 0
-			sum = List62[s] + sum
-		}
-		i--
-		j--
+// converts base62 token to int64
+func Decode62(token string) int64 {
+	var number int64
+	var idx = 0.0
+	chars := []byte(alphabet)
+
+	charsLength := float64(len(chars))
+	tokenLength := float64(len(token))
+
+	for _, c := range []byte(token) {
+		power := tokenLength - (idx + 1)
+		index := int64(bytes.IndexByte(chars, c))
+		number += index * int64(math.Pow(charsLength, power))
+		idx++
 	}
-	for i >= 0 {
-		s := getInt(str1[i]) + tem
-		if s >= 62 {
-			tem = 1
-			sum = List62[s%62] + sum
-		} else {
-			tem = 0
-			sum = List62[s] + sum
-		}
-		i--
-	}
-	for j >= 0 {
-		s := getInt(str2[i]) + tem
-		if s >= 62 {
-			tem = 1
-			sum = List62[s%62] + sum
-		} else {
-			tem = 0
-			sum = List62[s] + sum
-		}
-		j--
-	}
-	if tem != 0 {
-		sum = "1" + sum
-	}
-	return sum
+
+	return number
 }
