@@ -82,7 +82,7 @@ func ResponseHTML(w http.ResponseWriter, httpCode int, response []byte) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-	w.Header().Set("Content-Type", "text/html;application/json;charset=utf-8;")
+	w.Header().Set("Content-Type", "text/plain;charset=utf-8;")
 	w.Header().Set("Content-Length", strconv.Itoa(len(string(response))))
 
 	if httpCode == 0 {
@@ -98,7 +98,7 @@ func ResponseHTMLError(w http.ResponseWriter, httpCode int, err error) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-	w.Header().Set("Content-Type", "text/html;charset=utf-8;")
+	w.Header().Set("Content-Type", "text/plain;charset=utf-8;")
 	w.Header().Set("Content-Length", strconv.Itoa(len(err.Error())))
 
 	if httpCode == 0 {
@@ -277,8 +277,9 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func genSK(content string) (string, error) {
+	var _t = fmt.Sprintf(".%d.", time.Now().Unix())
 	var h = md5.New()
-	_, _ = h.Write([]byte(content))
+	_, _ = h.Write([]byte(content + _t))
 	var digest = hex.EncodeToString(h.Sum(nil))[8:24]
 	front, err := strconv.ParseInt(digest[:len(digest)/2], 16, 64)
 	if err != nil {
