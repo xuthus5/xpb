@@ -17,12 +17,13 @@ type CodeSegmentRecord struct {
 	Content   string   `bson:"content" json:"content"`
 	Author    string   `bson:"author" json:"author"`
 	Lang      string   `bson:"lang" json:"lang"`
-	Password  string   `bson:"password" json:"password"`
+	Password  string   `bson:"password" json:"-"`
 	ShortKey  string   `bson:"short_key" json:"short_key"`
 	Tags      []string `bson:"tags" json:"tags"`
-	Lifecycle uint8    `bson:"lifecycle" json:"lifecycle"`
+	Lifecycle uint8    `bson:"lifecycle" json:"-"`
 	CreatedAt int64    `bson:"created_at" json:"created_at"`
 	UpdatedAt int64    `bson:"updated_at" json:"updated_at"`
+	ExpiredAt int64    `json:"expired_at"`
 }
 
 func NewMongoClient() *mongo.Collection {

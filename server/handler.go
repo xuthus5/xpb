@@ -18,6 +18,18 @@ import (
 	"time"
 )
 
+const (
+	ClientErrCode      = 400
+	ServerErrCode      = 500
+	ErrRecordNotFound  = 4001
+	ErrRecordNeedPass  = 4002
+	ErrArgsMissing     = 4003
+	ErrArgsFormatError = 4004
+	ErrRecordExpired   = 4005
+
+	ErrServerInner = 5000
+)
+
 // ResponseJSON 输出JSON结果
 func ResponseJSON(w http.ResponseWriter, httpCode int, response interface{}) {
 	var resp = Response{
@@ -44,7 +56,7 @@ func ResponseJSON(w http.ResponseWriter, httpCode int, response interface{}) {
 	_, _ = w.Write(body)
 }
 
-func ResponseJSONError(w http.ResponseWriter, httpCode int, err error) {
+func ResponseJSONError(w http.ResponseWriter, httpCode, bizCode int, err error) {
 	//公共的响应头设置
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
@@ -56,7 +68,7 @@ func ResponseJSONError(w http.ResponseWriter, httpCode int, err error) {
 	}
 
 	var resp = &Response{
-		Code:    httpCode,
+		Code:    bizCode,
 		Message: err.Error(),
 		Data:    err,
 	}
@@ -93,7 +105,7 @@ func ResponseHTML(w http.ResponseWriter, httpCode int, response []byte) {
 	_, _ = w.Write(response)
 }
 
-func ResponseHTMLError(w http.ResponseWriter, httpCode int, err error) {
+func ResponseHTMLError(w http.ResponseWriter, httpCode, bizCode int, err error) {
 	//公共的响应头设置
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
@@ -122,7 +134,7 @@ func GetRecord(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	if sk == "" {
 		log.Errorf("sk empty")
-		ResponseJSONError(w, 400, errors.New("short_key empty"))
+		ResponseJSONError(w, ClientErrCode, ErrArgsMissing, errors.New("short_key empty"))
 		return
 	}
 
@@ -130,13 +142,13 @@ func GetRecord(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	err := driver.GetCollection().FindOne(context.Background(), bson.M{"short_key": sk}).Decode(&record)
 	if err != nil {
 		log.Errorf("find record err: %+v", err)
-		ResponseJSONError(w, 400, err)
+		ResponseJSONError(w, ClientErrCode, ErrRecordNotFound, err)
 		return
 	}
 
 	// 检查是否需要密码
 	if record.Password != "" && record.Password != password {
-		ResponseJSONError(w, http.StatusBadRequest, errors.New("you need a password to view this record"))
+		ResponseJSONError(w, ClientErrCode, ErrRecordNeedPass, errors.New("you need a password to view this record"))
 		return
 	}
 
@@ -149,21 +161,29 @@ func GetRecord(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var sub = nowTime - uptime
 
 	var isExp bool
+	var expSecond int64
 	switch record.Lifecycle {
 	case driver.LifeCycleOneDay:
 		isExp = sub > 86400
+		expSecond = 86400
 	case driver.LifeCycleOneWeek:
 		isExp = sub > 86400*7
+		expSecond = 86400 * 7
 	case driver.LifeCycleOneMonth:
 		isExp = sub > 86400*30
+		expSecond = 86400 * 30
 	case driver.LifeCycleOneYear:
 		isExp = sub > 86400*365
+		expSecond = 86400 * 365
 	default:
 		isExp = false
 	}
+	if expSecond != 0 {
+		record.ExpiredAt = uptime + expSecond
+	}
 
 	if isExp {
-		ResponseJSONError(w, http.StatusBadRequest, errors.New("record expired"))
+		ResponseJSONError(w, ClientErrCode, ErrRecordExpired, errors.New("record expired"))
 		return
 	}
 
@@ -180,25 +200,25 @@ func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Errorf("ioutil.ReadAll err: %+v", err)
-		ResponseJSONError(w, 400, err)
+		ResponseJSONError(w, ErrRecordExpired, ErrArgsFormatError, err)
 		return
 	}
 
 	if err := json.Unmarshal(body, &req); err != nil {
 		log.Errorf("unmarshal err: %+v", err)
-		ResponseJSONError(w, 400, err)
+		ResponseJSONError(w, ErrRecordExpired, ErrArgsFormatError, err)
 		return
 	}
 
 	if req.Title == "" {
 		log.Errorf("get title empty")
-		ResponseJSONError(w, 400, errors.New("req title empty"))
+		ResponseJSONError(w, ErrRecordExpired, ErrArgsMissing, errors.New("req title empty"))
 		return
 	}
 
 	if req.Content == "" {
 		log.Errorf("get content empty")
-		ResponseJSONError(w, 400, errors.New("req content empty"))
+		ResponseJSONError(w, ErrRecordExpired, ErrArgsMissing, errors.New("req content empty"))
 		return
 	}
 
@@ -208,7 +228,7 @@ func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		sk, err := genSK(req.Content)
 		if err != nil {
 			log.Errorf("get sk err: %v", err)
-			ResponseJSONError(w, 500, err)
+			ResponseJSONError(w, ServerErrCode, ErrServerInner, err)
 			return
 		}
 		req.ShortKey = sk
@@ -217,7 +237,7 @@ func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	_, err = driver.GetCollection().InsertOne(context.Background(), req)
 	if err != nil {
 		log.Errorf("insert err: %+v", err)
-		ResponseJSONError(w, 500, err)
+		ResponseJSONError(w, ServerErrCode, ErrServerInner, err)
 		return
 	}
 
@@ -228,13 +248,13 @@ func DelRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var sk = r.URL.Query().Get("sk")
 	if sk == "" {
 		log.Errorf("sk empty")
-		ResponseJSONError(w, 400, errors.New("short_key empty"))
+		ResponseJSONError(w, ErrRecordExpired, ErrArgsMissing, errors.New("short_key empty"))
 		return
 	}
 	err := driver.GetCollection().FindOneAndDelete(context.Background(), bson.M{"short_key": sk}).Err()
 	if err != nil {
 		log.Errorf("find and delete err: %v", err)
-		ResponseJSONError(w, 400, err)
+		ResponseJSONError(w, ErrRecordExpired, ErrRecordNotFound, err)
 		return
 	}
 
@@ -245,7 +265,7 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var sk = r.URL.Query().Get("sk")
 	if sk == "" {
 		log.Errorf("get sk empty")
-		ResponseJSONError(w, 400, errors.New("short_key empty"))
+		ResponseJSONError(w, ErrRecordExpired, ErrArgsMissing, errors.New("short_key empty"))
 		return
 	}
 
@@ -253,25 +273,25 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Errorf("ioutil.ReadAll err: %v", err)
-		ResponseJSONError(w, 400, err)
+		ResponseJSONError(w, ErrRecordExpired, ErrArgsFormatError, err)
 		return
 	}
 
 	if err := json.Unmarshal(body, &req); err != nil {
 		log.Errorf("Unmarshal err: %v", err)
-		ResponseJSONError(w, 400, err)
+		ResponseJSONError(w, ErrRecordExpired, ErrArgsFormatError, err)
 		return
 	}
 
 	if req.Title == "" {
 		log.Errorf("get title empty")
-		ResponseJSONError(w, 400, errors.New("req title empty"))
+		ResponseJSONError(w, ErrRecordExpired, ErrArgsMissing, errors.New("req title empty"))
 		return
 	}
 
 	if req.Content == "" {
 		log.Errorf("get content empty")
-		ResponseJSONError(w, 400, errors.New("req content empty"))
+		ResponseJSONError(w, ErrRecordExpired, ErrArgsMissing, errors.New("req content empty"))
 		return
 	}
 
@@ -280,7 +300,7 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	err = driver.GetCollection().FindOne(context.Background(), bson.M{"short_key": sk}).Decode(&old)
 	if err != nil {
 		log.Errorf("find record err: %+v", err)
-		ResponseJSONError(w, 400, err)
+		ResponseJSONError(w, ErrRecordExpired, ErrRecordNotFound, err)
 		return
 	}
 
@@ -292,7 +312,7 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		sk, err := genSK(req.Content)
 		if err != nil {
 			log.Errorf("get sk err: %v", err)
-			ResponseJSONError(w, 500, err)
+			ResponseJSONError(w, ServerErrCode, ErrServerInner, err)
 			return
 		}
 		req.ShortKey = sk
@@ -301,7 +321,7 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	err = driver.GetCollection().FindOneAndReplace(context.Background(), bson.M{"short_key": sk}, req).Err()
 	if err != nil {
 		log.Errorf("find and replace err: %+v", err)
-		ResponseJSONError(w, 400, err)
+		ResponseJSONError(w, ClientErrCode, ErrRecordNotFound, err)
 		return
 	}
 
