@@ -5,6 +5,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"pastebin/config"
+	"pastebin/server/sfs"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -38,6 +39,11 @@ func NewRouter() {
 	router.POST("/v1/add", AddRecord)
 	router.PUT("/v1/set", SetRecord)
 	router.DELETE("/v1/del", DelRecord)
+	router.GET("/s/:sk/raw", GetRecord)
+
+	router.NotFound = sfs.New(http.Dir("webui/dist"), func(writer http.ResponseWriter, request *http.Request) {
+		http.ServeFile(writer, request, "webui/dist/index.html")
+	})
 
 	log.Infof("%s start...", confer.ProjectName)
 	if confer.Https.Enable {

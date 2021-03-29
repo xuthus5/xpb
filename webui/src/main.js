@@ -21,7 +21,7 @@ Vue.use(VueCodemirror)
 Vue.use(VueHighlightJS)
 
 Vue.config.productionTip = false
-Vue.prototype.$ajax= axios
+Vue.prototype.$ajax = axios
 
 new Vue({
     router,

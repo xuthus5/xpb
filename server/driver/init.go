@@ -18,7 +18,8 @@ func init() {
 	defer cancel()
 	var err error
 
-	client, err = mongo.Connect(ctx, options.Client().ApplyURI(confer.Mongo.URI))
+	client, err = mongo.Connect(ctx, options.Client().ApplyURI(confer.Mongo.URI).
+		SetMaxPoolSize(16).SetMaxConnIdleTime(5*time.Second))
 	if err != nil {
 		panic(err)
 	}

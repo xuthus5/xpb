@@ -6,10 +6,8 @@ import (
 
 const (
 	LifeCycleOneDay = iota
-	LifeCycleThreeDay
 	LifeCycleOneWeek
 	LifeCycleOneMonth
-	LifeCycleSixMonth
 	LifeCycleOneYear
 	LifeCycleForever
 )

@@ -5,7 +5,7 @@ port: :8080
 # mongodb配置
 mongodb:
   uri: mongodb://127.0.0.1:27017
-  db: test
+  dbname: pastebin
 # https配置
 https:
   # 是否开启https

@@ -109,33 +109,73 @@ func ResponseHTMLError(w http.ResponseWriter, httpCode int, err error) {
 	_, _ = w.Write([]byte(err.Error()))
 }
 
-func GetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func GetRecord(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	var skraw = p.ByName("sk")
 	var sk = r.URL.Query().Get("sk")
+	var password = r.URL.Query().Get("password")
 	var format = r.URL.Query().Get("format")
+
+	if skraw != "" {
+		sk = skraw
+		format = "raw"
+	}
+
 	if sk == "" {
 		log.Errorf("sk empty")
 		ResponseJSONError(w, 400, errors.New("short_key empty"))
 		return
 	}
 
-	var req driver.CodeSegmentRecord
-	err := driver.GetCollection().FindOne(context.Background(), bson.M{"short_key": sk}).Decode(&req)
+	var record driver.CodeSegmentRecord
+	err := driver.GetCollection().FindOne(context.Background(), bson.M{"short_key": sk}).Decode(&record)
 	if err != nil {
 		log.Errorf("find record err: %+v", err)
 		ResponseJSONError(w, 400, err)
 		return
 	}
 
-	if format == "raw" {
-		ResponseHTML(w, http.StatusOK, []byte(req.Content))
+	// 检查是否需要密码
+	if record.Password != "" && record.Password != password {
+		ResponseJSONError(w, http.StatusBadRequest, errors.New("you need a password to view this record"))
 		return
 	}
 
-	ResponseJSON(w, http.StatusOK, req)
+	// 检查过期时间
+	var uptime = record.CreatedAt
+	var nowTime = time.Now().Unix()
+	if record.UpdatedAt > record.CreatedAt {
+		uptime = record.UpdatedAt
+	}
+	var sub = nowTime - uptime
+
+	var isExp bool
+	switch record.Lifecycle {
+	case driver.LifeCycleOneDay:
+		isExp = sub > 86400
+	case driver.LifeCycleOneWeek:
+		isExp = sub > 86400*7
+	case driver.LifeCycleOneMonth:
+		isExp = sub > 86400*30
+	case driver.LifeCycleOneYear:
+		isExp = sub > 86400*365
+	default:
+		isExp = false
+	}
+
+	if isExp {
+		ResponseJSONError(w, http.StatusBadRequest, errors.New("record expired"))
+		return
+	}
+
+	if format == "raw" {
+		ResponseHTML(w, http.StatusOK, []byte(record.Content))
+		return
+	}
+
+	ResponseJSON(w, http.StatusOK, record)
 }
 
 func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var format = r.URL.Query().Get("format")
 	var req driver.CodeSegmentRecord
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -179,10 +219,6 @@ func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		log.Errorf("insert err: %+v", err)
 		ResponseJSONError(w, 500, err)
 		return
-	}
-
-	if format == "" {
-		// 输出某些数据
 	}
 
 	ResponseJSON(w, http.StatusOK, req)
