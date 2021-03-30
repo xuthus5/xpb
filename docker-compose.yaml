@@ -1,0 +1,7 @@
+version: '2'
+services:
+  redis:
+    image: xuthus5/xpb
+    container_name: xpb
+    ports:
+      - 21330:21330

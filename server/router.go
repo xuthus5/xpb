@@ -45,7 +45,7 @@ func NewRouter() {
 		http.ServeFile(writer, request, "webui/dist/index.html")
 	})
 
-	log.Infof("%s start...", confer.ProjectName)
+	log.Infof("%s is running at http://localhost%s . Press Ctrl+C to stop.", confer.ProjectName, confer.Port)
 	if confer.Https.Enable {
 		log.Errorf("err: %v", http.ListenAndServeTLS(
 			confer.Port, confer.Https.CrtFile, confer.Https.KeyFile, router))
@@ -53,5 +53,4 @@ func NewRouter() {
 		log.Errorf("err: %v", http.ListenAndServe(
 			confer.Port, router))
 	}
-
 }

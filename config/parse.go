@@ -13,6 +13,8 @@ const defaultConfig = `# 项目名称
 project_name: pastebin
 # 端口
 port: :8080
+# debug
+debug: false
 # mongodb配置
 mongodb:
   uri: mongodb://127.0.0.1:27017
@@ -35,6 +37,7 @@ var (
 type Environments struct {
 	ProjectName string `yaml:"project_name"` //项目名称
 	Port        string `yaml:"port"`         //服务运行的 :port
+	Debug       bool   `yaml:"debug"`        //是否开启调试
 	Https       HTTPS  `yaml:"https"`        //https配置
 	Mongo       Mongo  `yaml:"mongodb"`      //mongo配置
 }
