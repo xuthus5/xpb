@@ -15,20 +15,21 @@ else
   echo "port: :21330" >> $configfile
 fi
 
-if [ $mongo_uri ]; then
-  echo "refresh_time_interval: ${time_interval}" >> $configfile
-else
-  echo "refresh_time_interval: 15" >> $configfile
-fi
-
 echo "# mongodb配置
 mongodb:" >> $configfile
 
-if [ $mongo_dbname ]; then
-  echo "  uri: ${mongo_dbname}" >> $configfile
+if [ $mongo_uri ]; then
+  echo "  uri: ${mongo_uri}" >> $configfile
 else
   echo "  uri: mongodb://127.0.0.1:27017" >> $configfile
 fi
+
+if [ $mongo_name ]; then
+  echo "  dbname: ${mongo_name}" >> $configfile
+else
+  echo "  dbname: pastebin" >> $configfile
+fi
+
 fi
 
 ./xpb serve
