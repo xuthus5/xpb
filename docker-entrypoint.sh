@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 configfile=/src/config.yaml
 
@@ -29,7 +29,10 @@ if [ $mongo_name ]; then
 else
   echo "  dbname: pastebin" >> $configfile
 fi
-
 fi
 
-./xpb serve
+echo "done"
+
+cat /src/config.yaml
+
+/src/xpb serve
