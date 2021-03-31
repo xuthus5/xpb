@@ -30,7 +30,7 @@
                 <b-col xl="6" lg="6" md="8" sm="12">
                     <codemirror
                         ref="cmEditor"
-                        v-model="content"
+                        v-model="record.content"
                         :options="cmOptions"
                         class="input"
                         placeholder="Code here..."
@@ -40,12 +40,21 @@
                         <b-row>
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
-                                    label="Title"
+                                    label="Title / Editable"
                                     label-for="input-title"
                                     label-align="left"
                                 >
-                                    <b-form-input id="input-title" v-model="title" trim
-                                                  placeholder="Brief description"></b-form-input>
+                                    <b-input-group>
+                                        <b-form-input id="input-title" v-model="record.title" trim
+                                                      placeholder="Brief description"></b-form-input>
+                                        <b-input-group-prepend is-text><b>$</b></b-input-group-prepend>
+                                        <b-input-group-prepend is-text>
+                                            <b-form-checkbox switch class="mr-n2" v-model="record.editable"
+                                                             button-variant="primary">
+                                                <span class="sr-only">Switch for following text input</span>
+                                            </b-form-checkbox>
+                                        </b-input-group-prepend>
+                                    </b-input-group>
                                 </b-form-group>
                             </b-col>
                             <b-col sm="12" md="12" lg="6" xl="6">
@@ -54,7 +63,7 @@
                                     label-for="input-lang"
                                     label-align="left"
                                 >
-                                    <b-form-select v-model="lang" :options="lang_opts"></b-form-select>
+                                    <b-form-select v-model="record.lang" :options="lang_opts"></b-form-select>
                                 </b-form-group>
                             </b-col>
                         </b-row>
@@ -65,7 +74,7 @@
                                     label-for="input-author"
                                     label-align="left"
                                 >
-                                    <b-form-input id="input-author" v-model="author" trim
+                                    <b-form-input id="input-author" v-model="record.author" trim
                                                   placeholder="Your name"></b-form-input>
                                 </b-form-group>
                             </b-col>
@@ -77,7 +86,7 @@
                                 >
                                     <b-form-tags
                                         id="custom_tags"
-                                        v-model="tags"
+                                        v-model="record.tags"
                                         tag-variant="primary"
                                         :limit="tags_limit"
                                         tag-pills
@@ -95,7 +104,7 @@
                                     label-align="left"
                                     description="Submitted data is not guaranteed to be permanent."
                                 >
-                                    <b-form-select v-model="lifecycle" :options="lifecycle_opts"></b-form-select>
+                                    <b-form-select v-model="record.lifecycle" :options="lifecycle_opts"></b-form-select>
                                 </b-form-group>
                             </b-col>
                             <b-col sm="12" md="12" lg="6" xl="6">
@@ -111,7 +120,7 @@
                                                 <span class="sr-only">Switch for following text input</span>
                                             </b-form-checkbox>
                                         </b-input-group-prepend>
-                                        <b-form-input v-model="password" :disabled="!need_password"
+                                        <b-form-input v-model="record.password" :disabled="!need_password"
                                                       placeholder="Enter a password"></b-form-input>
                                     </b-input-group>
                                 </b-form-group>
@@ -177,10 +186,17 @@ export default {
     components: {},
     data() {
         return {
-            title: "",
-            content: "",
-            author: "",
-            lang: "plaintext",
+            record: {
+                title: "",
+                content: "",
+                author: "",
+                lang: "plaintext",
+                password: "",
+                tags: [],
+                lifecycle: 0,
+                editable: false,
+            },
+
             lang_opts: [
                 {value: 'plaintext', text: 'Plain Text'},
                 {value: 'c', text: 'C'},
@@ -242,10 +258,7 @@ export default {
                 {value: 'vim', text: 'Vim Script'},
             ],
             need_password: false,
-            password: "",
-            tags: [],
             tags_limit: 10,
-            lifecycle: 0,
             lifecycle_opts: [
                 {value: 0, text: 'A day'},
                 {value: 2, text: 'A week'},
@@ -281,13 +294,14 @@ export default {
                 'content-type': 'application/json',
             }
             let payload = {
-                "title": this.title,
-                "content": this.content,
-                "author": this.author,
-                "lang": this.lang,
-                "tags": this.tags,
-                "lifecycle": this.lifecycle,
-                "password": this.password,
+                "title": this.record.title,
+                "content": this.record.content,
+                "author": this.record.author,
+                "lang": this.record.lang,
+                "tags": this.record.tags,
+                "lifecycle": this.record.lifecycle,
+                "password": this.record.password,
+                "editable": this.record.editable,
             }
 
             this.$ajax.post("/v1/add", payload, {headers: header}).then(response => {

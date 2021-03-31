@@ -40,12 +40,21 @@
                         <b-row>
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
-                                    label="Title"
+                                    label="Title / Editable"
                                     label-for="input-title"
                                     label-align="left"
                                 >
-                                    <b-form-input id="input-title" v-model="record.title" trim
-                                                  placeholder="Brief description"></b-form-input>
+                                    <b-input-group>
+                                        <b-form-input id="input-title" v-model="record.title" trim
+                                                      placeholder="Brief description"></b-form-input>
+                                        <b-input-group-prepend is-text><b>$</b></b-input-group-prepend>
+                                        <b-input-group-prepend is-text>
+                                            <b-form-checkbox switch class="mr-n2" v-model="record.editable"
+                                                             button-variant="primary">
+                                                <span class="sr-only">Switch for following text input</span>
+                                            </b-form-checkbox>
+                                        </b-input-group-prepend>
+                                    </b-input-group>
                                 </b-form-group>
                             </b-col>
                             <b-col sm="12" md="12" lg="6" xl="6">
@@ -185,6 +194,7 @@ export default {
                 password: "",
                 tags: [],
                 lifecycle: 0,
+                editable: false,
             },
 
             lang_opts: [
@@ -284,16 +294,17 @@ export default {
                 'content-type': 'application/json',
             }
             let payload = {
-                "title": this.title,
-                "content": this.content,
-                "author": this.author,
-                "lang": this.lang,
-                "tags": this.tags,
-                "lifecycle": this.lifecycle,
-                "password": this.password,
+                "title": this.record.title,
+                "content": this.record.content,
+                "author": this.record.author,
+                "lang": this.record.lang,
+                "tags": this.record.tags,
+                "lifecycle": this.record.lifecycle,
+                "password": this.record.password,
+                "editable": this.record.editable,
             }
 
-            this.$ajax.post("/v1/add", payload, {headers: header}).then(response => {
+            this.$ajax.put("/v1/set", payload, {headers: header}).then(response => {
                 let data = response.data;
                 if (data.code === 200) {
                     this.$router.push({name: 'Show', params: {sk: data.data.short_key}})
