@@ -32,7 +32,7 @@
                             <pre v-highlightjs="record.content">
                                 <code class="record.lang mt-0"></code>
                             </pre>
-                            <p class="text-left text-danger mt-0 pt-0" v-if="infoNeedShow">{{getExpiredInfo()}}</p>
+                            <p class="text-left text-danger mt-0 pt-0" v-if="infoNeedShow">{{ getExpiredInfo() }}</p>
                         </b-card-text>
 
                         <a :href="getRawContent()" class="card-link" target="_blank" v-if="infoNeedShow">raw content</a>
@@ -45,7 +45,8 @@
                                         <b-form-input type="password" class="form-control" placeholder="Password"
                                                       v-model="record.password"></b-form-input>
 
-                                        <button type="button" class="btn btn-primary ml-2" @click="showRecord">Go</button>
+                                        <button type="button" class="btn btn-primary ml-2" @click="showRecord">Go
+                                        </button>
                                     </b-form>
                                 </b-col>
                                 <b-col sm="1" md="2" lg="4" xl="4"></b-col>

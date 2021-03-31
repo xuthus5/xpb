@@ -6,6 +6,7 @@ import (
 	"github.com/guonaihong/gout"
 	"github.com/spf13/cobra"
 	"os"
+	"pastebin/common"
 	"pastebin/server"
 	"pastebin/server/driver"
 
@@ -48,6 +49,17 @@ var (
 
 				_, _ = fmt.Fprintf(os.Stdout, "url: https://cs.xuthus.cc/%v", pb.Data.(driver.CodeSegmentRecord).ShortKey)
 			}
+		},
+	}
+
+	Version string
+
+	cmdVersion = &cobra.Command{
+		Use:   "version",
+		Short: "Display version information.",
+		Long:  "Display version information.",
+		Run: func(cmd *cobra.Command, args []string) {
+			common.CrudeOutput(fmt.Sprintf("version info:\nxpb-server: %s\nxpb-webui: %s", Version, Version))
 		},
 	}
 )

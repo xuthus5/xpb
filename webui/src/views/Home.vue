@@ -209,7 +209,6 @@ export default {
                 {value: 'd', text: 'D'},
                 {value: 'delphi', text: 'Delphi'},
                 {value: 'django', text: 'Django'},
-                {value: 'dns', text: 'DNS Zone file'},
                 {value: 'dockerfile', text: 'Dockerfile'},
                 {value: 'dos', text: 'DOS .bat'},
                 {value: 'erlang', text: 'Erlang'},
@@ -288,6 +287,7 @@ export default {
                 "lang": this.lang,
                 "tags": this.tags,
                 "lifecycle": this.lifecycle,
+                "password": this.password,
             }
 
             this.$ajax.post("/v1/add", payload, {headers: header}).then(response => {

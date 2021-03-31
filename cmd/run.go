@@ -39,7 +39,7 @@ func RunCommand() {
 		Short: "xpb is a pastebin cli program.the official website is ?",
 	}
 
-	rootCmd.AddCommand(cmdServe, cmdPost)
+	rootCmd.AddCommand(cmdServe, cmdPost, cmdVersion)
 	if err := rootCmd.Execute(); err != nil {
 		log.Errorf("exec err: %v\n", err)
 		return
