@@ -50,7 +50,7 @@
                                         <b-input-group-prepend is-text><b>$</b></b-input-group-prepend>
                                         <b-input-group-prepend is-text>
                                             <b-form-checkbox switch class="mr-n2" v-model="record.editable"
-                                                             button-variant="primary">
+                                                             button-variant="primary" :disabled="!record.editable">
                                                 <span class="sr-only">Switch for following text input</span>
                                             </b-form-checkbox>
                                         </b-input-group-prepend>
