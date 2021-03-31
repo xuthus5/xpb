@@ -1,38 +1,35 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
-configfile=/src/config.yaml
+config_file=config.yaml
 
-if [[ ! -x "$configfile" ]]; then
+if [ ! -f "$config_file" ]; then
+touch "$config_file"
 echo "# 项目名称
 project_name: pastebin
 # debug
 debug: false
-# 端口" > $configfile
+# 端口" >> $config_file
 
-if [ $inner_port ]; then
-  echo "port: ${inner_port}" >> $configfile
+if [ -n "$inner_port" ]; then
+  echo "port: ${inner_port}" >> $config_file
 else
-  echo "port: :21330" >> $configfile
+  echo "port: :21330" >> $config_file
 fi
 
 echo "# mongodb配置
-mongodb:" >> $configfile
+mongodb:" >> $config_file
 
-if [ $mongo_uri ]; then
-  echo "  uri: ${mongo_uri}" >> $configfile
+if [ -n "$mongo_uri" ]; then
+  echo "  uri: ${mongo_uri}" >> $config_file
 else
-  echo "  uri: mongodb://127.0.0.1:27017" >> $configfile
+  echo "  uri: mongodb://127.0.0.1:27017" >> $config_file
 fi
 
-if [ $mongo_name ]; then
-  echo "  dbname: ${mongo_name}" >> $configfile
+if [ -n "$mongo_name" ]; then
+  echo "  dbname: ${mongo_name}" >> $config_file
 else
-  echo "  dbname: pastebin" >> $configfile
+  echo "  dbname: pastebin" >> $config_file
 fi
 fi
 
-echo "done"
-
-cat /src/config.yaml
-
-/src/xpb serve
+./xpb serve

@@ -1,20 +1,30 @@
-FROM golang:alpine
+FROM node:14.16.0-alpine AS webui-builder
+WORKDIR /builder
+COPY ./webui/ /builder/
+RUN npm config set registry https://registry.npm.taobao.org
+RUN npm install node-sass --registry=https://registry.npm.taobao.org --sass_binary_site=https://npm.taobao.org/mirrors/node-sass
+RUN npm install --registry=https://registry.npm.taobao.org --sass_binary_site=https://npm.taobao.org/mirrors/node-sass
+RUN npm run build
+
+FROM golang:1.16.2-alpine AS serv-builder
 WORKDIR /src
-ADD . /src/
-RUN chmod +x /src/docker-entrypoint.sh
+COPY ./cmd /src/cmd
+COPY ./common /src/common
+COPY ./config /src/config
+COPY ./logger /src/logger
+COPY ./server /src/server
+COPY ./main.go ./go.mod ./go.sum /src/
+ENV CGO_ENABLED=0
+RUN GO111MODULE=on GOPROXY=https://goproxy.cn GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags="-s -w" -o xpb .
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/repo.huaweicloud.com/g' /etc/apk/repositories && \
-    apk update && apk add nodejs nodejs-npm
-
-RUN npm config set registry https://registry.npm.taobao.org && cd /src/webui && npm install node-sass \
-    --registry=https://registry.npm.taobao.org --sass_binary_site=https://npm.taobao.org/mirrors/node-sass
-
-RUN cd /src/webui && npm install --registry=https://registry.npm.taobao.org \
-    --sass_binary_site=https://npm.taobao.org/mirrors/node-sass && \
-    npm run build && rm -rf node_modules
-
-RUN cd /src && GO111MODULE=on GOPROXY=https://goproxy.cn GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags="-s -w" -o xpb .
-
+FROM alpine:latest
+WORKDIR /app
+COPY ./docker-entrypoint.sh .
+RUN sed -i "s/dl-cdn.alpinelinux.org/repo.huaweicloud.com/g" /etc/apk/repositories && \
+    apk --no-cache add ca-certificates && update-ca-certificates
+RUN mkdir webui
+COPY --from=webui-builder /builder/dist ./webui/dist
+COPY --from=serv-builder /src/xpb .
+RUN chmod +x ./docker-entrypoint.sh
 EXPOSE 21330
-
-ENTRYPOINT ["/src/docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
