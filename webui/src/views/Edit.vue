@@ -142,7 +142,7 @@
                 <b-col xl="3" lg="3" md="2" sm="0"></b-col>
             </b-row>
 
-            <b-button variant="primary" class="mt-2" @click="paste" :disabled="record.editable">Paste!</b-button>
+            <b-button variant="primary" class="mt-2" @click="paste" :disabled="!record.editable">Paste!</b-button>
         </b-container>
 
         <div class="container py-5">
