@@ -24,6 +24,7 @@ type CodeSegmentRecord struct {
 	CreatedAt int64    `bson:"created_at" json:"created_at"`
 	UpdatedAt int64    `bson:"updated_at" json:"updated_at"`
 	ExpiredAt int64    `json:"expired_at"`
+	Editable  bool     `json:"editable"`
 }
 
 func NewMongoClient() *mongo.Collection {
