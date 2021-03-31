@@ -142,7 +142,7 @@
                 <b-col xl="3" lg="3" md="2" sm="0"></b-col>
             </b-row>
 
-            <b-button variant="primary" class="mt-2" @click="paste">Paste!</b-button>
+            <b-button variant="primary" class="mt-2" @click="paste" :disabled="record.editable">Paste!</b-button>
         </b-container>
 
         <div class="container py-5">
@@ -347,6 +347,10 @@ export default {
             let data = response.data;
             if (data.code === 200) {
                 this.record = data.data;
+                if (!this.record.editable) {
+                    this.showAlert("Editing has been turned off");
+                    return
+                }
             } else {
                 this.showAlert(data.message);
                 console.log("get response err: ", data);
@@ -356,7 +360,7 @@ export default {
             this.record = {content: data.message};
             if (data.code === 4002) {
                 // need password to show
-                this.showAlert("uneditable, need password");
+                this.showAlert("Need password, pass!");
                 this.needPassword = true;
                 return
             }
