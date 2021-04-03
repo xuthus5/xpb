@@ -234,6 +234,10 @@ func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		req.ShortKey = sk
 	}
 
+	if req.Lifecycle == 0 {
+		req.Lifecycle = 1
+	}
+
 	_, err = driver.GetCollection().InsertOne(context.Background(), req)
 	if err != nil {
 		log.Errorf("insert err: %+v", err)
@@ -258,11 +262,12 @@ func DelRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
-	ResponseJSON(w, http.StatusOK, Response{})
+	ResponseJSON(w, http.StatusOK, nil)
 }
 
 func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var sk = r.URL.Query().Get("sk")
+
 	if sk == "" {
 		log.Errorf("get sk empty")
 		ResponseJSONError(w, ErrRecordExpired, ErrArgsMissing, errors.New("short_key empty"))
@@ -295,6 +300,10 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
+	if req.Lifecycle == 0 {
+		req.Lifecycle = 1
+	}
+
 	// need find first
 	var old driver.CodeSegmentRecord
 	err = driver.GetCollection().FindOne(context.Background(), bson.M{"short_key": sk}).Decode(&old)
@@ -325,11 +334,7 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
-	ResponseJSON(w, http.StatusOK, Response{
-		Code:    http.StatusOK,
-		Message: "ok",
-		Data:    req,
-	})
+	ResponseJSON(w, http.StatusOK, req)
 }
 
 func genSK(content string) (string, error) {

@@ -10,11 +10,11 @@
                             pasted information between parties.
                         </div>
                         <div class="text-mono">
-                            <a href="#!"
-                               title="Download Theme"
+                            <router-link :to="{'name': 'Home'}"
+                               title="Go Home"
                                class="btn btn-success btn-shadow px-3 my-2 ml-0 text-left">
-                                Start
-                            </a>
+                                Home
+                            </router-link>
                         </div>
 
                         <div class="text-darkgrey text-mono my-2">It is intended to be used directly by humans.</div>
@@ -33,7 +33,8 @@
                         v-model="record.content"
                         :options="cmOptions"
                         class="input"
-                        placeholder="Code here..."
+                        placeholder="Edit code here..."
+                        rowspan="10"
                     />
 
                     <b-container fluid="" class="mt-2">
@@ -44,40 +45,41 @@
                                     label-for="input-title"
                                     label-align="left"
                                 >
-                                    <b-input-group>
-                                        <b-form-input id="input-title" v-model="record.title" trim
-                                                      placeholder="Brief description"></b-form-input>
-                                        <b-input-group-prepend is-text><b>$</b></b-input-group-prepend>
-                                        <b-input-group-prepend is-text>
-                                            <b-form-checkbox switch class="mr-n2" v-model="record.editable"
-                                                             button-variant="primary" :disabled="!record.editable">
-                                                <span class="sr-only">Switch for following text input</span>
-                                            </b-form-checkbox>
-                                        </b-input-group-prepend>
-                                    </b-input-group>
+                                    <b-form-input id="input-title" v-model="record.title" trim
+                                                  placeholder="Brief description" :disabled="!editable"></b-form-input>
                                 </b-form-group>
                             </b-col>
-                            <b-col sm="12" md="12" lg="6" xl="6">
-                                <b-form-group
-                                    label="Language"
-                                    label-for="input-lang"
-                                    label-align="left"
-                                >
-                                    <b-form-select v-model="record.lang" :options="lang_opts"></b-form-select>
-                                </b-form-group>
-                            </b-col>
-                        </b-row>
-                        <b-row>
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
                                     label="Author"
                                     label-for="input-author"
                                     label-align="left"
                                 >
-                                    <b-form-input id="input-author" v-model="record.author" trim
-                                                  placeholder="Your name"></b-form-input>
+                                    <b-input-group>
+                                        <b-form-input id="input-author" v-model="record.author" trim
+                                                      placeholder="Your name" :disabled="!editable"></b-form-input>
+                                        <b-input-group-prepend is-text><b>Editable</b></b-input-group-prepend>
+                                        <b-input-group-prepend is-text>
+                                            <b-form-checkbox switch class="mr-n2" v-model="record.editable"
+                                                             button-variant="primary" :disabled="!editable">
+                                                <span class="sr-only">Switch for following text input</span>
+                                            </b-form-checkbox>
+                                        </b-input-group-prepend>
+                                    </b-input-group>
                                 </b-form-group>
                             </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col sm="12" md="12" lg="6" xl="6">
+                                <b-form-group
+                                    label="Language"
+                                    label-for="input-lang"
+                                    label-align="left"
+                                >
+                                    <b-form-select v-model="record.lang" :options="lang_opts" :disabled="!editable"></b-form-select>
+                                </b-form-group>
+                            </b-col>
+
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
                                     label="Tags"
@@ -87,6 +89,7 @@
                                     <b-form-tags
                                         id="custom_tags"
                                         v-model="record.tags"
+                                        :disabled="!editable"
                                         tag-variant="primary"
                                         :limit="tags_limit"
                                         tag-pills
@@ -104,7 +107,7 @@
                                     label-align="left"
                                     description="Submitted data is not guaranteed to be permanent."
                                 >
-                                    <b-form-select v-model="record.lifecycle" :options="lifecycle_opts"></b-form-select>
+                                    <b-form-select v-model="record.lifecycle" :options="lifecycle_opts" :disabled="!editable"></b-form-select>
                                 </b-form-group>
                             </b-col>
                             <b-col sm="12" md="12" lg="6" xl="6">
@@ -116,11 +119,11 @@
                                     <b-input-group>
                                         <b-input-group-prepend is-text>
                                             <b-form-checkbox switch class="mr-n2" v-model="need_password"
-                                                             button-variant="primary">
+                                                             button-variant="primary" :disabled="!editable">
                                                 <span class="sr-only">Switch for following text input</span>
                                             </b-form-checkbox>
                                         </b-input-group-prepend>
-                                        <b-form-input v-model="record.password" :disabled="!need_password"
+                                        <b-form-input v-model="record.password" :disabled="!need_password || editable"
                                                       placeholder="Enter a password"></b-form-input>
                                     </b-input-group>
                                 </b-form-group>
@@ -135,14 +138,14 @@
                              @dismissed="dismissCountDown=0"
                              @dismiss-count-down="countDownChanged"
                     >
-                        Paste error: {{ pasteErrorMessage }}
+                        Error: {{ pasteErrorMessage }}
                     </b-alert>
 
                 </b-col>
                 <b-col xl="3" lg="3" md="2" sm="0"></b-col>
             </b-row>
 
-            <b-button variant="primary" class="mt-2" @click="paste" :disabled="!record.editable">Paste!</b-button>
+            <b-button variant="primary" class="mt-2" @click="paste" :disabled="!editable">Paste!</b-button>
         </b-container>
 
         <div class="container py-5">
@@ -182,10 +185,12 @@ import 'codemirror/addon/fold/xml-fold.js'
 import 'codemirror/theme/ayu-mirage.css'
 
 export default {
-    name: 'Home',
+    name: 'Edit',
     components: {},
     data() {
         return {
+            sk: '',
+            editable: false,
             record: {
                 title: "",
                 content: "",
@@ -260,10 +265,10 @@ export default {
             need_password: false,
             tags_limit: 10,
             lifecycle_opts: [
-                {value: 0, text: 'A day'},
+                {value: 1, text: 'A day'},
                 {value: 2, text: 'A week'},
                 {value: 3, text: 'A month'},
-                {value: 5, text: 'A year'},
+                {value: 4, text: 'A year'},
             ],
 
             cmOptions: {
@@ -304,10 +309,10 @@ export default {
                 "editable": this.record.editable,
             }
 
-            this.$ajax.put("/v1/set", payload, {headers: header}).then(response => {
+            this.$ajax.put("/v1/set?sk="+this.sk, payload, {headers: header}).then(response => {
                 let data = response.data;
                 if (data.code === 200) {
-                    this.$router.push({name: 'Show', params: {sk: data.data.short_key}})
+                    this.$router.push({name: 'Show', params: {sk: data.data.sk}})
                 } else {
                     console.log("get response err: ", data);
                     this.showAlert(data.message);
@@ -339,25 +344,30 @@ export default {
         }
         this.sk = sk;
 
+        let password = this.$route.query.password;
+
         let header = {
             'content-type': 'application/json',
         }
 
-        this.$ajax.get("/v1/get?sk=" + sk, {headers: header}).then(response => {
+        this.$ajax.get("/v1/get?sk=" + this.sk+"&password="+password, {headers: header}).then(response => {
             let data = response.data;
             if (data.code === 200) {
                 this.record = data.data;
-                if (!this.record.editable) {
+                if (this.record.editable) {
+                    this.editable = true;
+                } else {
                     this.showAlert("Editing has been turned off");
-                    return
                 }
             } else {
                 this.showAlert(data.message);
                 console.log("get response err: ", data);
             }
         }).catch(error => {
-            var data = error.response.data;
-            this.record = {content: data.message};
+            let data = error.response.data;
+            let msg = data.message;
+            msg += '\nWARN:\nadd a GET parameter \'?password={record password}\' to apply for authorization\nfor example: https://eg.com/edit/3M4YJK?password=admin'
+            this.record = {content: msg};
             if (data.code === 4002) {
                 // need password to show
                 this.showAlert("Need password, pass!");
@@ -381,6 +391,7 @@ textarea {
 }
 
 .CodeMirror, .vue-codemirror {
+    height: 512px;
     text-align: left !important;
     font-family: "Fira Code", "Courier New", Courier, monospace !important;
 }
@@ -391,6 +402,10 @@ textarea {
 
 .b-form-tags.focus {
     color: #1ddd86 !important;
+    background-color: #28293e;
+}
+
+.b-form-tags.disabled {
     background-color: #28293e;
 }
 

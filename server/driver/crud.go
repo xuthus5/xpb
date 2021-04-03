@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	LifeCycleOneDay = iota
+	LifeCycleNil = iota
+	LifeCycleOneDay
 	LifeCycleOneWeek
 	LifeCycleOneMonth
 	LifeCycleOneYear
@@ -18,9 +19,9 @@ type CodeSegmentRecord struct {
 	Author    string   `bson:"author" json:"author"`
 	Lang      string   `bson:"lang" json:"lang"`
 	Password  string   `bson:"password" json:"-"`
-	ShortKey  string   `bson:"short_key" json:"short_key"`
+	ShortKey  string   `bson:"short_key" json:"sk"`
 	Tags      []string `bson:"tags" json:"tags"`
-	Lifecycle uint8    `bson:"lifecycle" json:"-"`
+	Lifecycle uint8    `bson:"lifecycle" json:"lifecycle"`
 	CreatedAt int64    `bson:"created_at" json:"created_at"`
 	UpdatedAt int64    `bson:"updated_at" json:"updated_at"`
 	ExpiredAt int64    `json:"expired_at"`

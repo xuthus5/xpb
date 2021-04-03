@@ -33,21 +33,32 @@
                         v-model="record.content"
                         :options="cmOptions"
                         class="input"
-                        placeholder="Code here..."
+                        placeholder="Paste code here..."
                     />
 
                     <b-container fluid="" class="mt-2">
                         <b-row>
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
-                                    label="Title / Editable"
+                                    label="Title"
                                     label-for="input-title"
                                     label-align="left"
                                 >
+                                    <b-form-input id="input-title" v-model="record.title" trim
+                                                  placeholder="Brief Title Description"></b-form-input>
+                                </b-form-group>
+                            </b-col>
+                            <b-col sm="12" md="12" lg="6" xl="6">
+                                <b-form-group
+                                    label="Author / Editable"
+                                    label-for="input-author"
+                                    label-align="left"
+                                >
+
                                     <b-input-group>
-                                        <b-form-input id="input-title" v-model="record.title" trim
+                                        <b-form-input id="input-title" v-model="record.author" trim
                                                       placeholder="Brief description"></b-form-input>
-                                        <b-input-group-prepend is-text><b>$</b></b-input-group-prepend>
+                                        <b-input-group-prepend is-text><b>Editable</b></b-input-group-prepend>
                                         <b-input-group-prepend is-text>
                                             <b-form-checkbox switch class="mr-n2" v-model="record.editable"
                                                              button-variant="primary">
@@ -57,6 +68,8 @@
                                     </b-input-group>
                                 </b-form-group>
                             </b-col>
+                        </b-row>
+                        <b-row>
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
                                     label="Language"
@@ -64,18 +77,6 @@
                                     label-align="left"
                                 >
                                     <b-form-select v-model="record.lang" :options="lang_opts"></b-form-select>
-                                </b-form-group>
-                            </b-col>
-                        </b-row>
-                        <b-row>
-                            <b-col sm="12" md="12" lg="6" xl="6">
-                                <b-form-group
-                                    label="Author"
-                                    label-for="input-author"
-                                    label-align="left"
-                                >
-                                    <b-form-input id="input-author" v-model="record.author" trim
-                                                  placeholder="Your name"></b-form-input>
                                 </b-form-group>
                             </b-col>
                             <b-col sm="12" md="12" lg="6" xl="6">
@@ -159,6 +160,8 @@ import 'codemirror/mode/javascript/javascript.js'
 
 // closebrackets
 import 'codemirror/addon/edit/closebrackets.js'
+
+import 'codemirror/addon/display/placeholder.js'
 
 // styleSelectedText
 import 'codemirror/addon/selection/mark-selection.js'
@@ -307,7 +310,7 @@ export default {
             this.$ajax.post("/v1/add", payload, {headers: header}).then(response => {
                 let data = response.data;
                 if (data.code === 200) {
-                    this.$router.push({name: 'Show', params: {sk: data.data.short_key}})
+                    this.$router.push({name: 'Show', params: {sk: data.data.sk}})
                 } else {
                     console.log("get response err: ", data);
                     this.showAlert(data.message);
@@ -345,6 +348,7 @@ textarea {
 }
 
 .CodeMirror, .vue-codemirror {
+    height: 512px;
     text-align: left !important;
     font-family: "Fira Code", "Courier New", Courier, monospace !important;
 }

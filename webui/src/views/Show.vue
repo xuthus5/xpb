@@ -32,10 +32,16 @@
                             <pre v-highlightjs="record.content">
                                 <code class="record.lang mt-0"></code>
                             </pre>
-                            <p class="text-left text-danger mt-0 pt-0" v-if="infoNeedShow">{{ getExpiredInfo() }}</p>
+                            <div>
+                                <span class="text-left text-danger mt-0 pt-0" v-if="infoNeedShow">{{ getExpiredInfo() }}</span>
+                                <span class="text-right float-right text-danger mt-0 pt-0" v-if="infoNeedShow">
+                                    <b-badge variant="success" v-for="(item, i) in record.tags" class="mr-1">{{item}}</b-badge>
+                                </span>
+                            </div>
                         </b-card-text>
 
-                        <a :href="getRawContent()" class="card-link" target="_blank" v-if="infoNeedShow">raw content</a>
+                        <a :href="getEditLink()" class="card-link btn btn-secondary mr-2" target="_blank" v-if="record.editable">Public Edit</a>
+                        <a :href="getRawLink()" class="card-link btn btn-primary" target="_blank" v-if="infoNeedShow">Raw Content</a>
 
                         <b-container fluid="">
                             <b-row>
@@ -62,7 +68,7 @@
         <div class="container py-5">
             <p>Powered by <a href="https://xuthus.cc" target="_blank" class="text-danger">xuthus</a>, it's open source
                 :) - <a
-                    href="https://github.com/xuthus5/xpb" target="_blank" class="text-danger">pastebinx</a></p>
+                    href="https://github.com/xuthus5/xpb" target="_blank" class="text-danger">xpb</a></p>
         </div>
     </div>
 </template>
@@ -93,8 +99,11 @@ export default {
         getExpiredInfo() {
             return 'This paste expires on ' + this.set_time(this.record.expired_at) + ' .'
         },
-        getRawContent() {
-            return '/s/' + this.sk + '/raw';
+        getRawLink() {
+            return '/raw/' + this.sk;
+        },
+        getEditLink() {
+            return '/edit/' + this.sk;
         },
 
         set_time(str) {
