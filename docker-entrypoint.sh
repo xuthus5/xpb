@@ -32,4 +32,4 @@ else
 fi
 fi
 
-./xpb serve
+./pbx serve

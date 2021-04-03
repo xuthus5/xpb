@@ -68,7 +68,7 @@
         <div class="container py-5">
             <p>Powered by <a href="https://xuthus.cc" target="_blank" class="text-danger">xuthus</a>, it's open source
                 :) - <a
-                    href="https://github.com/xuthus5/xpb" target="_blank" class="text-danger">xpb</a></p>
+                    href="https://github.com/xuthus5/pbx" target="_blank" class="text-danger">pbx</a></p>
         </div>
     </div>
 </template>

@@ -15,7 +15,7 @@ COPY ./logger /src/logger
 COPY ./server /src/server
 COPY ./main.go ./go.mod ./go.sum /src/
 ENV CGO_ENABLED=0
-RUN GO111MODULE=on GOPROXY=https://goproxy.cn GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags="-s -w" -o xpb .
+RUN GO111MODULE=on GOPROXY=https://goproxy.cn GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags="-s -w" -o pbx .
 
 FROM alpine:latest
 WORKDIR /app
@@ -24,7 +24,7 @@ RUN sed -i "s/dl-cdn.alpinelinux.org/repo.huaweicloud.com/g" /etc/apk/repositori
     apk --no-cache add ca-certificates && update-ca-certificates
 RUN mkdir webui
 COPY --from=webui-builder /builder/dist ./webui/dist
-COPY --from=serv-builder /src/xpb .
+COPY --from=serv-builder /src/pbx .
 RUN chmod +x ./docker-entrypoint.sh
 EXPOSE 21330
 ENTRYPOINT ["./docker-entrypoint.sh"]

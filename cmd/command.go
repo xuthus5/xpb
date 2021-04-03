@@ -16,8 +16,7 @@ import (
 var (
 	cmdServe = &cobra.Command{
 		Use:   "serve",
-		Short: "run a pastebin serve in local",
-		Long:  "run a pastebin serve in local",
+		Short: "run a pbx serve in local",
 		Run: func(cmd *cobra.Command, args []string) {
 			server.NewRouter()
 		},
@@ -25,8 +24,7 @@ var (
 
 	cmdPost = &cobra.Command{
 		Use:   "post [...]",
-		Short: "Post code segment to https://cs.xuthus.cc",
-		Long:  "Post code segment to https://cs.xuthus.cc",
+		Short: "Post code segment to https://xpb.xuthus.cc",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, body := range args {
@@ -59,7 +57,7 @@ var (
 		Short: "Display version information.",
 		Long:  "Display version information.",
 		Run: func(cmd *cobra.Command, args []string) {
-			common.CrudeOutput(fmt.Sprintf("version info:\nxpb-server: %s\nxpb-webui: %s", Version, Version))
+			common.CrudeOutput(fmt.Sprintf("version info:\npbx-server: %s\npbx-webui: %s", Version, Version))
 		},
 	}
 )
