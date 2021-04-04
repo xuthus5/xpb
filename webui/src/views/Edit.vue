@@ -365,15 +365,14 @@ export default {
             }
         }).catch(error => {
             let data = error.response.data;
-            let msg = data.message;
-            msg += '\nWARN:\nadd a GET parameter \'?password={record password}\' to apply for authorization\nfor example: https://eg.com/edit/3M4YJK?password=admin'
-            this.record = {content: msg};
+            let msg = 'WARN:\n'+data.message;
             if (data.code === 4002) {
                 // need password to show
-                this.showAlert("Need password, pass!");
+                msg += '\nadd a GET parameter \'?password={record password}\' to apply for authorization\nfor example: https://eg.com/edit/3M4YJK?password=admin'
+                this.showAlert("Need password! Set a GET parameter password to apply for authorization.");
                 this.needPassword = true;
-                return
             }
+            this.record = {content: msg};
             console.log("get err: ", error.response);
         })
     }

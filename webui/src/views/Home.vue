@@ -263,10 +263,10 @@ export default {
             need_password: false,
             tags_limit: 10,
             lifecycle_opts: [
-                {value: 0, text: 'A day'},
+                {value: 1, text: 'A day'},
                 {value: 2, text: 'A week'},
                 {value: 3, text: 'A month'},
-                {value: 5, text: 'A year'},
+                {value: 4, text: 'A year'},
             ],
 
             cmOptions: {
