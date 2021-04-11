@@ -196,7 +196,7 @@ export default {
                 lang: "plaintext",
                 password: "",
                 tags: [],
-                lifecycle: 0,
+                lifecycle: 1,
                 editable: false,
             },
 
