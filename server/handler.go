@@ -202,7 +202,7 @@ func GetRecord(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	ResponseJSON(w, http.StatusOK, record)
 }
 
-func GetPublicRecordList(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func GetRecordList(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var ctx = context.Background()
 	var records []*driver.CodeSegmentRecord
 
