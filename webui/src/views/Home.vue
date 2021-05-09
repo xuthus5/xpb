@@ -12,9 +12,13 @@
                         <div class="text-mono">
                             <a href="#!"
                                title="Download Theme"
-                               class="btn btn-success btn-shadow px-3 my-2 ml-0 text-left">
+                               class="btn btn-success btn-shadow px-3 my-2 ml-0 text-left mr-2">
                                 Start
                             </a>
+                            <router-link :to='{"name": "Archive"}'
+                                         class="btn btn-primary btn-shadow px-3 my-2 ml-0 text-left">
+                                Archive
+                            </router-link>
                         </div>
 
                         <div class="text-darkgrey text-mono my-2">It is intended to be used directly by humans.</div>
@@ -41,23 +45,21 @@
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
                                     label="Title"
-                                    label-for="input-title"
                                     label-align="left"
                                 >
-                                    <b-form-input v-model="record.title" trim required
-                                                  placeholder="Brief Title Description"></b-form-input>
+                                    <b-form-input v-model="record.title" trim
+                                                  placeholder="title Description"></b-form-input>
                                 </b-form-group>
                             </b-col>
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
                                     label="Author / Editable"
-                                    label-for="input-author"
                                     label-align="left"
                                 >
 
                                     <b-input-group>
-                                        <b-form-input id="input-author" v-model="record.author" trim required
-                                                      placeholder="Brief description"></b-form-input>
+                                        <b-form-input v-model="record.author" trim
+                                                      placeholder="Your name"></b-form-input>
                                         <b-input-group-prepend is-text><b>Editable</b></b-input-group-prepend>
                                         <b-input-group-prepend is-text>
                                             <b-form-checkbox switch class="mr-n2" v-model="record.editable"
@@ -82,7 +84,6 @@
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
                                     label="Tags"
-                                    label-for="input-lang"
                                     label-align="left"
                                 >
                                     <b-form-tags

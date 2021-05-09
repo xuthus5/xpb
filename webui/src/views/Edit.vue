@@ -42,21 +42,19 @@
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
                                     label="Title / Editable"
-                                    label-for="input-title"
                                     label-align="left"
                                 >
-                                    <b-form-input id="input-title" v-model="record.title" trim
-                                                  placeholder="Brief description" :disabled="!editable"></b-form-input>
+                                    <b-form-input v-model="record.title" trim
+                                                  placeholder="title description" :disabled="!editable"></b-form-input>
                                 </b-form-group>
                             </b-col>
                             <b-col sm="12" md="12" lg="6" xl="6">
                                 <b-form-group
                                     label="Author"
-                                    label-for="input-author"
                                     label-align="left"
                                 >
                                     <b-input-group>
-                                        <b-form-input id="input-author" v-model="record.author" trim
+                                        <b-form-input v-model="record.author" trim
                                                       placeholder="Your name" :disabled="!editable"></b-form-input>
                                         <b-input-group-prepend is-text><b>Editable</b></b-input-group-prepend>
                                         <b-input-group-prepend is-text>

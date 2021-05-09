@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"io/ioutil"
 	"net/http"
 	"pastebin/common"
@@ -204,7 +205,16 @@ func GetRecord(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 func GetPublicRecordList(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var ctx = context.Background()
 	var records []*driver.CodeSegmentRecord
-	cursor, err := driver.GetCollection().Find(ctx, bson.M{})
+
+	var limit int64 = 100
+	var sort = bson.D{
+		{"updated_at", -1},
+	}
+	var opts = options.FindOptions{
+		Limit: &limit,
+		Sort:  sort,
+	}
+	cursor, err := driver.GetCollection().Find(ctx, bson.M{"password": ""}, &opts)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			err = errors.New("record not found")
