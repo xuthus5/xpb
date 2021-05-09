@@ -66,7 +66,7 @@ export default {
             'content-type': 'application/json',
         }
 
-        this.$ajax.get("/v1/archive", {headers: header}).then(response => {
+        this.$ajax.get("/v1/list", {headers: header}).then(response => {
             let data = response.data;
             if (data.code === 200) {
                 this.items = data.data;

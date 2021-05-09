@@ -217,8 +217,7 @@ func GetPublicRecordList(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	cursor, err := driver.GetCollection().Find(ctx, bson.M{"password": ""}, &opts)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			err = errors.New("record not found")
-			ResponseJSONError(w, ErrHttpCodeOk, ErrRecordNotFound, err)
+			ResponseJSONError(w, ErrHttpCodeOk, ErrRecordNotFound, errors.New("record not found"))
 			return
 		}
 		log.Errorf("find record err: %+v", err)
