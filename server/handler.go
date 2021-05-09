@@ -10,6 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"io/ioutil"
 	"net/http"
 	"pastebin/common"
@@ -19,15 +20,13 @@ import (
 )
 
 const (
-	ClientErrCode      = 400
-	ServerErrCode      = 500
+	ErrHttpCodeOk      = 200
 	ErrRecordNotFound  = 4001
 	ErrRecordNeedPass  = 4002
 	ErrArgsMissing     = 4003
 	ErrArgsFormatError = 4004
 	ErrRecordExpired   = 4005
-
-	ErrServerInner = 5000
+	ErrServerInner     = 5000
 )
 
 // ResponseJSON 输出JSON结果
@@ -64,7 +63,7 @@ func ResponseJSONError(w http.ResponseWriter, httpCode, bizCode int, err error) 
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 
 	if httpCode == 0 {
-		httpCode = http.StatusInternalServerError
+		httpCode = http.StatusOK
 	}
 
 	var resp = &Response{
@@ -134,23 +133,30 @@ func GetRecord(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	if sk == "" {
 		log.Errorf("sk empty")
-		ResponseJSONError(w, ClientErrCode, ErrArgsMissing, errors.New("short_key empty"))
+		ResponseJSONError(w, ErrHttpCodeOk, ErrArgsMissing, errors.New("short_key empty"))
 		return
 	}
 
 	var record driver.CodeSegmentRecord
 	err := driver.GetCollection().FindOne(context.Background(), bson.M{"short_key": sk}).Decode(&record)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			err = errors.New("record not found")
+			ResponseJSONError(w, ErrHttpCodeOk, ErrRecordNotFound, err)
+			return
+		}
 		log.Errorf("find record err: %+v", err)
-		ResponseJSONError(w, ClientErrCode, ErrRecordNotFound, err)
+		ResponseJSONError(w, ErrHttpCodeOk, ErrServerInner, err)
 		return
 	}
 
 	// 检查是否需要密码
 	if record.Password != "" && record.Password != password {
-		ResponseJSONError(w, ClientErrCode, ErrRecordNeedPass, errors.New("you need a password to view this record"))
+		ResponseJSONError(w, ErrHttpCodeOk, ErrRecordNeedPass, errors.New("you need a password to view this record"))
 		return
 	}
+	// 不允许 password 字段暴露
+	record.Password = ""
 
 	// 检查过期时间
 	var uptime = record.CreatedAt
@@ -183,7 +189,7 @@ func GetRecord(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	if isExp {
-		ResponseJSONError(w, ClientErrCode, ErrRecordExpired, errors.New("record expired"))
+		ResponseJSONError(w, ErrHttpCodeOk, ErrRecordExpired, errors.New("record expired"))
 		return
 	}
 
@@ -193,6 +199,38 @@ func GetRecord(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	ResponseJSON(w, http.StatusOK, record)
+}
+
+func GetPublicRecordList(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	var ctx = context.Background()
+	var records []*driver.CodeSegmentRecord
+	cursor, err := driver.GetCollection().Find(ctx, bson.M{})
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			err = errors.New("record not found")
+			ResponseJSONError(w, ErrHttpCodeOk, ErrRecordNotFound, err)
+			return
+		}
+		log.Errorf("find record err: %+v", err)
+		ResponseJSONError(w, ErrHttpCodeOk, ErrRecordNotFound, err)
+		return
+	}
+
+	if cursor.Err() != nil {
+		log.Errorf("find record err: %+v", err)
+		ResponseJSONError(w, ErrHttpCodeOk, ErrServerInner, err)
+		return
+	}
+
+	defer cursor.Close(ctx)
+
+	if err = cursor.All(ctx, &records); err != nil {
+		log.Errorf("find record err: %+v", err)
+		ResponseJSONError(w, ErrHttpCodeOk, ErrServerInner, err)
+		return
+	}
+
+	ResponseJSON(w, http.StatusOK, records)
 }
 
 func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -222,13 +260,19 @@ func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
-	req.CreatedAt = time.Now().Unix()
+	if req.Author == "" {
+		req.Author = "Anonymous"
+	}
+
+	var tm = time.Now().Unix()
+	req.CreatedAt = tm
+	req.UpdatedAt = tm
 
 	if req.ShortKey == "" {
 		sk, err := genSK(req.Content)
 		if err != nil {
 			log.Errorf("get sk err: %v", err)
-			ResponseJSONError(w, ServerErrCode, ErrServerInner, err)
+			ResponseJSONError(w, ErrHttpCodeOk, ErrServerInner, err)
 			return
 		}
 		req.ShortKey = sk
@@ -241,7 +285,7 @@ func AddRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	_, err = driver.GetCollection().InsertOne(context.Background(), req)
 	if err != nil {
 		log.Errorf("insert err: %+v", err)
-		ResponseJSONError(w, ServerErrCode, ErrServerInner, err)
+		ResponseJSONError(w, ErrHttpCodeOk, ErrServerInner, err)
 		return
 	}
 
@@ -321,7 +365,7 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		sk, err := genSK(req.Content)
 		if err != nil {
 			log.Errorf("get sk err: %v", err)
-			ResponseJSONError(w, ServerErrCode, ErrServerInner, err)
+			ResponseJSONError(w, ErrHttpCodeOk, ErrServerInner, err)
 			return
 		}
 		req.ShortKey = sk
@@ -330,7 +374,7 @@ func SetRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	err = driver.GetCollection().FindOneAndReplace(context.Background(), bson.M{"short_key": sk}, req).Err()
 	if err != nil {
 		log.Errorf("find and replace err: %+v", err)
-		ResponseJSONError(w, ClientErrCode, ErrRecordNotFound, err)
+		ResponseJSONError(w, ErrHttpCodeOk, ErrRecordNotFound, err)
 		return
 	}
 

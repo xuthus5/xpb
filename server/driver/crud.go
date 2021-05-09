@@ -18,9 +18,9 @@ type CodeSegmentRecord struct {
 	Content   string   `bson:"content" json:"content"`
 	Author    string   `bson:"author" json:"author"`
 	Lang      string   `bson:"lang" json:"lang"`
-	Password  string   `bson:"password" json:"-"`
+	Password  string   `bson:"password" json:"password,omitempty"`
 	ShortKey  string   `bson:"short_key" json:"sk"`
-	Tags      []string `bson:"tags" json:"tags"`
+	Tags      []string `bson:"tags" json:"tags,omitempty"`
 	Lifecycle uint8    `bson:"lifecycle" json:"lifecycle"`
 	CreatedAt int64    `bson:"created_at" json:"created_at"`
 	UpdatedAt int64    `bson:"updated_at" json:"updated_at"`

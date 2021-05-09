@@ -24,7 +24,7 @@
             </b-container>
         </div>
 
-        <b-container fluid="">
+        <b-container fluid="" class="content">
             <b-row>
                 <b-col xl="3" lg="3" md="2" sm="0"></b-col>
                 <b-col xl="6" lg="6" md="8" sm="12">
@@ -142,7 +142,9 @@
                     </b-alert>
 
                 </b-col>
-                <b-col xl="3" lg="3" md="2" sm="0"></b-col>
+                <b-col xl="3" lg="3" md="2" sm="0">
+                    <flash-message transitionName="flash" class="flash-pool mt-2"></flash-message>
+                </b-col>
             </b-row>
 
             <b-button variant="primary" class="mt-2" @click="paste" :disabled="!editable">Paste!</b-button>
@@ -295,6 +297,8 @@ export default {
     },
     methods: {
         paste() {
+            if (this.record.title === '') return this.flashWarning('title empty');
+            if (this.record.content === '') return this.flashWarning('content empty');
             let header = {
                 'content-type': 'application/json',
             }
@@ -315,11 +319,10 @@ export default {
                     this.$router.push({name: 'Show', params: {sk: data.data.sk}})
                 } else {
                     console.log("get response err: ", data);
-                    this.showAlert(data.message);
+                    this.flashError(data.message);
                 }
             }).catch(error => {
-                console.log("get err: ", error.response);
-                this.showAlert(error.response.data.message)
+                this.flashError(error);
             })
         },
 
@@ -339,7 +342,7 @@ export default {
     created() {
         let sk = this.$route.params.sk;
         if (sk === "") {
-            this.showAlert("args miss");
+            this.flashError("args miss");
             return
         }
         this.sk = sk;
@@ -356,24 +359,26 @@ export default {
                 this.record = data.data;
                 if (this.record.editable) {
                     this.editable = true;
-                } else {
-                    this.showAlert("Editing has been turned off");
+                    return
                 }
-            } else {
-                this.showAlert(data.message);
-                console.log("get response err: ", data);
             }
-        }).catch(error => {
-            let data = error.response.data;
+
             let msg = 'WARN:\n'+data.message;
             if (data.code === 4002) {
                 // need password to show
                 msg += '\nadd a GET parameter \'?password={record password}\' to apply for authorization\nfor example: https://eg.com/edit/3M4YJK?password=admin'
-                this.showAlert("Need password! Set a GET parameter password to apply for authorization.");
+                this.flashError("Need password! Set a GET parameter password to apply for authorization.");
                 this.needPassword = true;
+                this.record = {content: msg};
+                return;
             }
-            this.record = {content: msg};
-            console.log("get err: ", error.response);
+
+            this.record = {content: data.message};
+            this.flashError(data.message);
+            console.log("get err: ", response);
+        }).catch(error => {
+            this.flashError(error);
+            console.log("get err: ", error);
         })
     }
 }

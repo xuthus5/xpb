@@ -11,4 +11,20 @@
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
 }
+
+.flash__message {
+    margin-right: 1rem;
+}
+
+.container {
+    position: relative;
+}
+
+.flash-pool {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 0;
+}
+
 </style>

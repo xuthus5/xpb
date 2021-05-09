@@ -24,7 +24,7 @@
             </b-container>
         </div>
 
-        <b-container fluid="">
+        <b-container fluid="" class="content">
             <b-row>
                 <b-col xl="3" lg="3" md="2" sm="0"></b-col>
                 <b-col xl="6" lg="6" md="8" sm="12">
@@ -44,7 +44,7 @@
                                     label-for="input-title"
                                     label-align="left"
                                 >
-                                    <b-form-input id="input-title" v-model="record.title" trim
+                                    <b-form-input v-model="record.title" trim required
                                                   placeholder="Brief Title Description"></b-form-input>
                                 </b-form-group>
                             </b-col>
@@ -56,7 +56,7 @@
                                 >
 
                                     <b-input-group>
-                                        <b-form-input id="input-title" v-model="record.author" trim
+                                        <b-form-input id="input-author" v-model="record.author" trim required
                                                       placeholder="Brief description"></b-form-input>
                                         <b-input-group-prepend is-text><b>Editable</b></b-input-group-prepend>
                                         <b-input-group-prepend is-text>
@@ -140,7 +140,9 @@
                     </b-alert>
 
                 </b-col>
-                <b-col xl="3" lg="3" md="2" sm="0"></b-col>
+                <b-col xl="3" lg="3" md="2" sm="0">
+                    <flash-message transitionName="flash" class="flash-pool mt-2"></flash-message>
+                </b-col>
             </b-row>
 
             <b-button variant="primary" class="mt-2" @click="paste">Paste!</b-button>
@@ -293,6 +295,8 @@ export default {
     },
     methods: {
         paste() {
+            if (this.record.title === '') return this.flashWarning('title empty');
+            if (this.record.content === '') return this.flashWarning('content empty');
             let header = {
                 'content-type': 'application/json',
             }
@@ -313,11 +317,10 @@ export default {
                     this.$router.push({name: 'Show', params: {sk: data.data.sk}})
                 } else {
                     console.log("get response err: ", data);
-                    this.showAlert(data.message);
+                    this.flashError(data.message);
                 }
             }).catch(error => {
-                console.log("get err: ", error.response);
-                this.showAlert(error.response.data.message)
+                this.flashError(error)
             })
         },
 

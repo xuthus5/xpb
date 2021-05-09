@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <b-container fluid="" class="mt-2">
+        <b-container fluid="" class="mt-2 content">
             <b-row>
                 <b-col xl="2" lg="2" md="2" sm="0"></b-col>
                 <b-col xl="8" lg="8" md="8" sm="12">
@@ -61,7 +61,9 @@
 
                     </b-card>
                 </b-col>
-                <b-col xl="2" lg="2" md="2" sm="0"></b-col>
+                <b-col xl="2" lg="2" md="2" sm="0">
+                    <flash-message transitionName="flash" class="flash-pool mt-2"></flash-message>
+                </b-col>
             </b-row>
         </b-container>
 
@@ -140,16 +142,19 @@ export default {
                 if (data.code === 200) {
                     this.needPassword = false;
                     this.record = data.data;
-                } else {
-                    this.record = {content: data.message};
-                    console.log("get response err: ", data);
+                    return;
                 }
-            }).catch(error => {
-                var data = error.response.data;
-                this.record = {content: data.message};
                 if (data.code === 4002) {
+                    this.record = {content: data.message};
                     this.needPassword = true;
+                    this.flashWarning("need password.");
+                    return;
                 }
+
+                this.flashError(data.message);
+                console.log("get response: ", data);
+            }).catch(error => {
+                this.flashError('get err: ',error);
                 console.log("get err: ", error.response);
             })
         }
@@ -170,17 +175,24 @@ export default {
             let data = response.data;
             if (data.code === 200) {
                 this.record = data.data;
-            } else {
-                this.record = {content: data.message};
-                console.log("get response err: ", data);
+                return;
             }
-        }).catch(error => {
-            var data = error.response.data;
-            this.record = {content: data.message};
+
+            let msg = 'WARN:\n'+data.message;
             if (data.code === 4002) {
                 // need password to show
+                msg += '\nadd a GET parameter \'?password={record password}\' to apply for authorization\nfor example: https://eg.com/edit/3M4YJK?password=admin'
+                this.flashError("Need password! Set a GET parameter password to apply for authorization.");
                 this.needPassword = true;
+                this.record = {content: msg};
+                return;
             }
+
+            this.record = {content: data.message};
+            this.flashError(data.message);
+            console.log("get err: ", response);
+        }).catch(error => {
+            this.flashError('get err: ',error);
             console.log("get err: ", error.response);
         })
     }

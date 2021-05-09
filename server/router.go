@@ -36,6 +36,7 @@ func NewRouter() {
 	})
 
 	router.GET("/v1/get", GetRecord)
+	router.GET("/v1/public_list", GetPublicRecordList)
 	router.POST("/v1/add", AddRecord)
 	router.PUT("/v1/set", SetRecord)
 	router.DELETE("/v1/del", DelRecord)
