@@ -27,11 +27,11 @@ func NewRouter() {
 	})
 
 	router.GET("/v1/get", GetRecord)
+	router.GET("/v1/list", GetRecordList)
 	router.POST("/v1/add", AddRecord)
 	router.PUT("/v1/set", SetRecord)
 	router.DELETE("/v1/del", DelRecord)
 	router.GET("/raw/:sk", GetRecord)
-	router.POST("/v1/list", GetRecordList)
 
 	router.NotFound = sfs.New(http.Dir("webui/dist"), func(writer http.ResponseWriter, request *http.Request) {
 		http.ServeFile(writer, request, "webui/dist/index.html")
