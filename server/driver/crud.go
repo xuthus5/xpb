@@ -15,7 +15,7 @@ const (
 
 type CodeSegmentRecord struct {
 	Title     string   `bson:"title" json:"title"`
-	Content   string   `bson:"content" json:"content"`
+	Content   string   `bson:"content" json:"content,omitempty"`
 	Author    string   `bson:"author" json:"author"`
 	Lang      string   `bson:"lang" json:"lang"`
 	Password  string   `bson:"password" json:"password,omitempty"`

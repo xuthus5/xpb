@@ -233,6 +233,16 @@ func GetPublicRecordList(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 
 	defer cursor.Close(ctx)
 
+	for cursor.Next(ctx) {
+		var t driver.CodeSegmentRecord
+		if err := cursor.Decode(&t); err != nil {
+			log.Errorf("Decode record err: %+v", err)
+			continue
+		}
+		t.Content = ""
+		records = append(records, &t)
+	}
+
 	if err = cursor.All(ctx, &records); err != nil {
 		log.Errorf("find record err: %+v", err)
 		ResponseJSONError(w, ErrHttpCodeOk, ErrServerInner, err)
