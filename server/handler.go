@@ -214,7 +214,7 @@ func GetRecordList(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		Limit: &limit,
 		Sort:  sort,
 	}
-	cursor, err := driver.GetCollection().Find(ctx, bson.M{"password": ""}, &opts)
+	cursor, err := driver.GetCollection().Find(ctx, bson.M{}, &opts)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			ResponseJSONError(w, ErrHttpCodeOk, ErrRecordNotFound, errors.New("record not found"))
@@ -239,7 +239,43 @@ func GetRecordList(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 			log.Errorf("Decode record err: %+v", err)
 			continue
 		}
+
+		var uptime = t.CreatedAt
+		var nowTime = time.Now().Unix()
+		if t.UpdatedAt > t.CreatedAt {
+			uptime = t.UpdatedAt
+		}
+		var sub = nowTime - uptime
+
+		var isExp bool
+		var expSecond int64
+		switch t.Lifecycle {
+		case driver.LifeCycleOneDay:
+			isExp = sub > 86400
+			expSecond = 86400
+		case driver.LifeCycleOneWeek:
+			isExp = sub > 86400*7
+			expSecond = 86400 * 7
+		case driver.LifeCycleOneMonth:
+			isExp = sub > 86400*30
+			expSecond = 86400 * 30
+		case driver.LifeCycleOneYear:
+			isExp = sub > 86400*365
+			expSecond = 86400 * 365
+		default:
+			isExp = false
+		}
+		if expSecond != 0 {
+			t.ExpiredAt = uptime + expSecond
+		}
+
+		// 过期了 不显示
+		if isExp {
+			continue
+		}
+
 		t.Content = ""
+		t.Password = ""
 		records = append(records, &t)
 	}
 
